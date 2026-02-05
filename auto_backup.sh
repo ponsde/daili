@@ -15,7 +15,7 @@ echo "=== Backup started at $(date) ===" >> $LOG_FILE
 # 所以只要你通过 UI 改了配置，文件已经变了，不需要复制
 
 # 2. 同步 ClewdR 配置文件 (Cookie 等)
-# 因为 ClewdR 运行在 Docker 里
+# 因为 ClewdR 运行在 Docker 里，如果不是挂载模式，需要拷贝出来
 if docker ps | grep -q "$CLEWDR_CONTAINER"; then
     if docker cp $CLEWDR_CONTAINER:/app/clewdr.toml "$CLEWDR_CONFIG" 2>>$LOG_FILE; then
         echo "Synced ClewdR config from container." >> $LOG_FILE
@@ -26,7 +26,13 @@ else
     echo "Warning: ClewdR container is not running, skipping config backup." >> $LOG_FILE
 fi
 
-# 3. 提交并推送到 GitHub
+# 3. 检查 API Gateway 配置
+# API Gateway 使用挂载模式，文件直接位于 run/api_change/ 下，无需手动 docker cp
+if [ -f "$REPO_DIR/run/api_change/keys.json" ]; then
+    echo "API Gateway keys found." >> $LOG_FILE
+fi
+
+# 4. 提交并推送到 GitHub
 cd "$REPO_DIR"
 
 # 检查是否有文件通过 git status 发生变化

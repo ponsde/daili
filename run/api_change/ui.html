@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>api_change 控制台</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <style>
+      body { padding: 0; margin: 0; background: #f6f8fb; }
+      * { scrollbar-width: thin; scrollbar-color: #486888 #f1f1f1; }
+      *::-webkit-scrollbar { width: 12px; }
+      *::-webkit-scrollbar-track { background: #f1f1f1; }
+      *::-webkit-scrollbar-thumb { background: #486888; border-radius: 20px; }
+      *::-webkit-scrollbar-thumb:hover { background: #486888; }
+
+      .main-contaier { display: flex; width: 100vw; height: 100vh; }
+      .sidenav { height: 100%; width: 260px; background-color: #2c3e50; padding-top: 20px; }
+      .brand { color: #fff; font-weight: 700; font-size: 20px; padding: 0 18px 18px; }
+      .navigation-link { text-decoration: none; font-size: 16px; color: #ffffff; display: block; }
+      .sidenav a:hover { background-color: #476584; color: #ffffff !important; }
+      .sidenav a { padding: 10px 15px; }
+      .right-panel { display: flex; flex-grow: 1; flex-direction: column; overflow-y: auto; }
+      .nav-bar { background-color: #486888; color: #ffffff; padding: 10px 20px; font-size: 18px; display: flex; justify-content: space-between; }
+      .content { padding: 20px; }
+      .card-title { margin-bottom: 12px; }
+      .muted { color: #6c757d; }
+      .pill { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #e8eef6; color: #2c3e50; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="main-contaier">
+      <div class="sidenav">
+        <div class="brand">api_change</div>
+        <a class="navigation-link" href="#overview"><i class="bi bi-speedometer2"></i> 概览</a>
+        <a class="navigation-link" href="#keys"><i class="bi bi-key"></i> 密钥管理</a>
+        <a class="navigation-link" href="#routes"><i class="bi bi-diagram-3"></i> 路由</a>
+      </div>
+      <div class="right-panel">
+        <nav class="nav-bar">
+          <div class="nav-heading">OpenAI → Claude (图像) 网关</div>
+          <div class="nav-actions"><span class="pill">{{ROUTE_INFO}}</span></div>
+        </nav>
+        <div class="content">
+          <div id="overview" class="row g-3">
+            <div class="col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="card-title"><i class="bi bi-check-circle"></i> 状态</div>
+                  <div class="h5">运行中</div>
+                  <div class="muted">服务端时间：<span id="serverTime">--</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="card-title"><i class="bi bi-link-45deg"></i> 上游 (ClewdR)</div>
+                  <div class="h6 text-truncate" id="upstreamDisplay">检测中...</div>
+                  <div id="upstreamStatus" class="muted">--</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <div class="card-title"><i class="bi bi-activity"></i> 健康检查</div>
+                  <div class="muted">网关服务正常</div>
+                  <button id="healthBtn" class="btn btn-sm btn-outline-primary mt-2">重新检测</button>
+                  <div id="healthStatus" class="muted mt-2"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <div id="config" class="card shadow-sm">
+            <div class="card-body">
+              <div class="card-title"><i class="bi bi-gear"></i> 系统设置</div>
+              <div class="muted mb-3">修改 ClewdR 上游地址 (默认: http://127.0.0.1:8484)</div>
+              <div class="row g-2 align-items-center">
+                <div class="col-md-9">
+                  <input id="upstreamUrl" class="form-control" placeholder="例如 http://127.0.0.1:8484" />
+                </div>
+                <div class="col-md-3 d-grid">
+                  <button id="saveConfigBtn" class="btn btn-warning">保存设置</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <div id="keys" class="card shadow-sm">
+            <div class="card-body">
+              <div class="card-title"><i class="bi bi-key"></i> 密钥管理</div>
+              <div class="muted mb-3">使用管理员密钥管理 API key。</div>
+              <div class="row g-2 align-items-center">
+                <div class="col-md-9">
+                  <input id="adminKey" class="form-control" placeholder="管理员密钥" type="password" />
+                </div>
+                <div class="col-md-3 d-grid">
+                  <button id="loadBtn" class="btn btn-primary">加载</button>
+                </div>
+                <div class="col-md-9">
+                  <input id="newKey" class="form-control" placeholder="新增 API key (A-Z a-z 0-9 . _ -)" />
+                </div>
+                <div class="col-md-3 d-grid">
+                  <button id="addBtn" class="btn btn-success">添加</button>
+                </div>
+                <div class="col-md-9">
+                  <input id="delKey" class="form-control" placeholder="要删除的 API key" />
+                </div>
+                <div class="col-md-3 d-grid">
+                  <button id="delBtn" class="btn btn-danger">删除</button>
+                </div>
+              </div>
+              <div id="status" class="muted mt-3"></div>
+              <ul id="keyList" class="mt-2"></ul>
+            </div>
+          </div>
+
+          <hr class="my-4" />
+
+          <div id="routes" class="card shadow-sm">
+            <div class="card-body">
+              <div class="card-title"><i class="bi bi-diagram-3"></i> 路由</div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="muted">OpenAI 入口：</div>
+                  <div><code>/v1/chat/completions</code></div>
+                </div>
+                <div class="col-md-6">
+                  <div class="muted">Claude Code 入口：</div>
+                  <div><code>/code/v1/chat/completions</code></div>
+                </div>
+              </div>
+              <div class="muted mt-2">严格路由：/v1 -> 普通 Claude；/code/v1 -> Claude Code。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const adminKeyInput = document.getElementById('adminKey');
+      const upstreamUrlInput = document.getElementById('upstreamUrl');
+      const newKeyInput = document.getElementById('newKey');
+      const delKeyInput = document.getElementById('delKey');
+      const statusEl = document.getElementById('status');
+      const listEl = document.getElementById('keyList');
+      const healthBtn = document.getElementById('healthBtn');
+      const healthStatus = document.getElementById('healthStatus');
+      const upstreamDisplay = document.getElementById('upstreamDisplay');
+      const upstreamStatus = document.getElementById('upstreamStatus');
+
+      async function checkHealth() {
+        healthStatus.textContent = '检测中...';
+        try {
+          const res = await fetch('/health');
+          const json = await res.json();
+          healthStatus.textContent = json.ok ? '网关: 正常' : '网关: 异常';
+          
+          if (json.upstreamUrl) {
+             upstreamDisplay.textContent = json.upstreamUrl;
+             upstreamDisplay.title = json.upstreamUrl; // tooltip
+             upstreamUrlInput.placeholder = json.upstreamUrl; // update placeholder
+          }
+          
+          if (json.upstream === 'ok') {
+             upstreamStatus.textContent = '连接状态: 通畅';
+             upstreamStatus.className = 'text-success';
+          } else {
+             upstreamStatus.textContent = '连接状态: 异常/无法连接';
+             upstreamStatus.className = 'text-danger';
+          }
+        } catch (e) {
+          healthStatus.textContent = '连接失败';
+          upstreamStatus.textContent = '--';
+        }
+      }
+
+      healthBtn.onclick = checkHealth;
+      // Auto check on load
+      checkHealth();
+
+      function setStatus(msg) { statusEl.textContent = msg; }
+      function sanitizeKey(raw) {
+        if (!raw) return '';
+        return raw.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+      }
+      function isValidKey(key) {
+        return /^[A-Za-z0-9._-]+$/.test(key);
+      }
+      async function api(path, method, body) {
+        const adminKey = adminKeyInput.value.trim();
+        if (!adminKey) throw new Error('管理员密钥不能为空');
+        const resp = await fetch(path, {
+          method,
+          headers: {
+            'content-type': 'application/json',
+            'authorization': 'Bearer ' + adminKey
+          },
+          body: body ? JSON.stringify(body) : undefined
+        });
+        const text = await resp.text();
+        if (!resp.ok) throw new Error(text || '请求失败');
+        return text ? JSON.parse(text) : {};
+      }
+      async function loadKeys() {
+        setStatus('加载中...');
+        const data = await api('/admin/keys', 'GET');
+        listEl.innerHTML = '';
+        (data.keys || []).forEach((k) => {
+          const li = document.createElement('li');
+          li.textContent = k;
+          listEl.appendChild(li);
+        });
+        setStatus('已加载');
+      }
+      async function loadConfig() {
+        try {
+           const data = await api('/admin/config', 'GET');
+           if (data.upstreamUrl) upstreamUrlInput.value = data.upstreamUrl;
+        } catch (e) {
+           // ignore
+        }
+      }
+      document.getElementById('saveConfigBtn').onclick = async () => {
+         const url = upstreamUrlInput.value.trim();
+         if (!url) return setStatus('URL 不能为空');
+         try {
+             await api('/admin/config', 'POST', { upstreamUrl: url });
+             setStatus('设置已保存');
+         } catch(e) { setStatus(e.message); }
+      };
+      document.getElementById('loadBtn').onclick = async () => {
+        try {
+          setStatus('加载中...');
+          await loadConfig();
+          await loadKeys();
+        } catch(e) { setStatus(e.message); }
+      };
+      document.getElementById('addBtn').onclick = () => {
+        const key = sanitizeKey(newKeyInput.value);
+        if (!key) return setStatus('Key 不能为空');
+        if (!isValidKey(key)) return setStatus('Key 含非法字符');
+        return api('/admin/keys', 'POST', { key }).then(loadKeys).catch((e) => setStatus(e.message));
+      };
+      document.getElementById('delBtn').onclick = () => {
+        const key = sanitizeKey(delKeyInput.value);
+        if (!key) return setStatus('Key 不能为空');
+        return api('/admin/keys', 'DELETE', { key }).then(loadKeys).catch((e) => setStatus(e.message));
+      };
+      healthBtn.onclick = async () => {
+        healthStatus.textContent = '检测中...';
+        try {
+          const res = await fetch('/health');
+          const json = await res.json();
+          healthStatus.textContent = json.ok ? 'OK' : '异常';
+        } catch (e) {
+          healthStatus.textContent = '失败';
+        }
+      };
+      serverTime.textContent = new Date().toLocaleString();
+    </script>
+  </body>
+</html>

@@ -106,7 +106,7 @@ docker run -d \
   -p 8383:8383 \
   -e PORT=8383 \
   -e CLEWDR_BASE_URL=http://172.17.0.1:8484 \
-  -e CLEWDR_API_KEY=sk-daili \
+  -e CLEWDR_API_KEY=sk-ponsde \
   -e GATEWAY_ADMIN_KEY=sk-ponsde \
   -e KEYS_FILE=/app/keys.json \
   -v $(pwd)/keys.json:/app/keys.json \
